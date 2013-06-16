@@ -17,6 +17,7 @@ Example project included (DAAppsViewControllerExample)
 ### Displaying apps by a specific developer (useful for "Our other apps")
 
 Get your artist ID from the iTunes URL first:
+
 ![Screenshot](https://github.com/rbaulin/DAAppsViewController/raw/master/howToGetArtistId.png)
 
 ```objective-c
