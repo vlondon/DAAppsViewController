@@ -75,12 +75,13 @@ static NSMutableDictionary *_iconCacheDictionary = nil;
         self.nameLabel.frame = (CGRect) {
             .origin.x = 88.0f,
             .origin.y = 20.0f,
-            .size.width = self.frame.size.width - 165.0f,
+            .size.width = self.frame.size.width - 88. - 10.,// - 165.0f,
             .size.height = 15.0f
         };
         self.nameLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
         self.nameLabel.font = [UIFont boldSystemFontOfSize:14.0f];
         self.nameLabel.backgroundColor = [UIColor clearColor];
+//        [self.nameLabel setBackgroundColor:[UIColor redColor]];
         self.nameLabel.textColor = [UIColor colorWithWhite:78.0f/255.0f alpha:1.0f];
         [self addSubview:self.nameLabel];
         
@@ -93,6 +94,7 @@ static NSMutableDictionary *_iconCacheDictionary = nil;
         };
         self.genreLabel.font = [UIFont systemFontOfSize:10.0f];
         self.genreLabel.backgroundColor = [UIColor clearColor];
+//        [self.genreLabel setBackgroundColor:[UIColor redColor]];
         self.genreLabel.textColor = [UIColor colorWithWhite:99.0f/255.0f alpha:1.0f];
         [self addSubview:self.genreLabel];
         
@@ -135,8 +137,8 @@ static NSMutableDictionary *_iconCacheDictionary = nil;
         
         self.purchaseButton = [UIButton buttonWithType:UIButtonTypeCustom];
         self.purchaseButton.frame = (CGRect) {
-            .origin.x = self.frame.size.width - 67.0f,
-            .origin.y = 28.0f,
+            .origin.x = self.frame.size.width - 59.0f - 12.,
+            .origin.y = 39.0f, // this is more about how new App Store looks like
             .size.width = 59.0f,
             .size.height = 25.0f
         };
@@ -154,7 +156,7 @@ static NSMutableDictionary *_iconCacheDictionary = nil;
         [self.purchaseButton addTarget:self
                                 action:@selector(purchaseButton:)
                       forControlEvents:UIControlEventTouchUpInside];
-        [self setAccessoryView:self.purchaseButton];
+        [self addSubview:self.purchaseButton];
     }
     return self;
 }
@@ -180,7 +182,10 @@ static NSMutableDictionary *_iconCacheDictionary = nil;
     self.ratingsLabel.hidden = !appObject.userRatingCount;
     self.noRatingsLabel.hidden = appObject.userRatingCount;
     self.starImageView.hidden = !appObject.userRatingCount;
-    [self.purchaseButton setTitle:appObject.formattedPrice forState:UIControlStateNormal];
+//    [self.purchaseButton setTitle:appObject.formattedPrice forState:UIControlStateNormal];
+    // it needs to be sized correctly if set with price
+    // but we want to introduce the apps here, without the price tag
+    [self.purchaseButton setTitle:@"Show" forState:UIControlStateNormal];
     
     UIImage *starsImage = [UIImage imageNamed:@"DAAppsViewController.bundle/DAStarsImage"];
     UIGraphicsBeginImageContextWithOptions(self.starImageView.frame.size, NO, 0);
