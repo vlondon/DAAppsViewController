@@ -15,6 +15,7 @@
 @property (nonatomic, strong) NSDictionary *artistsDictionary;
 @property (nonatomic, strong) NSDictionary *appsDictionary;
 @property (nonatomic, strong) NSDictionary *termsDictionary;
+@property (nonatomic, strong) NSArray      *excludeIds;
 
 @end
 
@@ -34,10 +35,12 @@
     
     self.artistsDictionary = [NSDictionary dictionaryWithObjectsAndKeys:
                               @356087517, @"Daniel Amitay",
+                              @475892173, @"Roman Baulin",
                               @284417353, @"Apple",
                               @284882218, @"Facebook",
                               @281956209, @"Google",
                               nil];
+    self.excludeIds = @[@475892170,@537993679,@549439059];
     
     self.appsDictionary = [NSDictionary dictionaryWithObjectsAndKeys:
                            @[@592447445,@333903271,@284882215,@288429040,@403639508,@310633997], @"Social Apps",
@@ -140,7 +143,7 @@
         {
             NSString *key = [self.artistsDictionary.allKeys objectAtIndex:indexPath.row];
             NSNumber *number = [self.artistsDictionary objectForKey:key];
-            [appsViewController loadAppsWithArtistId:number.integerValue completionBlock:nil];
+            [appsViewController loadAppsWithArtistId:number.integerValue excludeIds:self.excludeIds completionBlock:nil];
         }
             break;
         case 1:

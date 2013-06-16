@@ -15,6 +15,7 @@
 
 @interface DAAppsViewController () <NSURLConnectionDelegate, SKStoreProductViewControllerDelegate>
 
+@property (nonatomic, strong) id productViewController;
 @property (nonatomic, strong) NSURLConnection *urlConnection;
 @property (nonatomic, strong) NSMutableData *responseData;
 @property (nonatomic, strong) NSArray *appsArray;
@@ -35,6 +36,9 @@
     self.tableView.rowHeight = 83.0f;
     self.tableView.backgroundColor = DARK_BACKGROUND_COLOR;
     
+    UIBarButtonItem *closeItem = [[UIBarButtonItem alloc] initWithTitle:@"Close" style:UIBarButtonItemStyleBordered target:self action:@selector(closeAction)];
+    self.navigationItem.rightBarButtonItem = closeItem;
+    
     UIView *tableFooterView = [[UIView alloc] init];
     tableFooterView.backgroundColor = [UIColor whiteColor];
     tableFooterView.frame = (CGRect) {
@@ -42,6 +46,10 @@
         .size.height = 1.0f
     };
     self.tableView.tableFooterView = tableFooterView;
+}
+
+- (void)closeAction {
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -90,10 +98,8 @@
     return jsonDictionary;
 }
 
-- (void)loadAppsWithArtistId:(NSInteger)artistId completionBlock:(void(^)(BOOL result, NSError *error))block
+- (void)loadAppsWithArtistId:(NSInteger)artistId excludeIds:(NSArray *)excludeIds completionBlock:(void(^)(DAAppsViewController *controller, NSError *error))completionBlock
 {
-    self.title = NSLocalizedString(@"Loading...",);
-    
     dispatch_queue_t request_thread = dispatch_queue_create(NULL, NULL);
     dispatch_async(request_thread, ^{
         NSString *countryCode = [[NSLocale currentLocale] objectForKey:NSLocaleCountryCode];
@@ -112,9 +118,9 @@
         if (requestError)
         {
             dispatch_async(dispatch_get_main_queue(), ^{
-                if (block)
+                if (completionBlock)
                 {
-                    block(FALSE, requestError);
+                    completionBlock(self, requestError);
                 }
             });
         }
@@ -130,12 +136,15 @@
                 NSArray *content = [swoosh objectForKey:@"content"];
                 for (NSDictionary *lockup in content)
                 {
+                    NSInteger appId = [[lockup objectForKey:@"id"] integerValue];
+                    if ([excludeIds containsObject:@(appId)]) continue;
+                    
                     DAAppObject *appObject = [[DAAppObject alloc] init];
                     
                     appObject.bundleId = [lockup objectForKey:@"bundle-id"];
                     appObject.name = [lockup objectForKey:@"name"];
                     appObject.genre = [lockup objectForKey:@"genre"];
-                    appObject.appId = [[lockup objectForKey:@"id"] integerValue];
+                    appObject.appId = appId;
                     appObject.iconIsPrerendered = [[lockup objectForKey:@"icon-is-prerendered"] boolValue];
                     appObject.isUniversal = [[lockup objectForKey:@"is_universal_app"] boolValue];
                     
@@ -158,12 +167,11 @@
             }
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                self.title = pageTitle;
                 self.appsArray = mutableApps;
                 [self.tableView reloadData];
-                if (block)
+                if (completionBlock)
                 {
-                    block(TRUE, NULL);
+                    completionBlock(self, nil);
                 }
             });
         }
@@ -175,8 +183,6 @@
 
 - (void)loadAppsWithAppIds:(NSArray *)appIds completionBlock:(void(^)(BOOL result, NSError *error))block
 {
-    self.title = NSLocalizedString(@"Loading...",);
-    
     dispatch_queue_t request_thread = dispatch_queue_create(NULL, NULL);
     dispatch_async(request_thread, ^{
         NSString *appString = [appIds componentsJoinedByString:@","];
@@ -489,18 +495,29 @@
     
     if ([SKStoreProductViewController class])
     {
-        NSDictionary *appParameters = @{SKStoreProductParameterITunesItemIdentifier : [NSString stringWithFormat:@"%u", appObject.appId]};
+        NSDictionary *appParameters = @{SKStoreProductParameterITunesItemIdentifier : @(appObject.appId)};
         SKStoreProductViewController *productViewController = [[SKStoreProductViewController alloc] init];
         [productViewController setDelegate:self];
-        [productViewController loadProductWithParameters:appParameters completionBlock:nil];
-        [self presentViewController:productViewController
-                           animated:YES
-                         completion:nil];
+        if (self.loadingBlock) self.loadingBlock(YES, nil);
+        [productViewController loadProductWithParameters:appParameters completionBlock:^(BOOL result, NSError *error) {
+            if (self.loadingBlock) self.loadingBlock(NO, error);
+            [self presentViewController:productViewController
+                               animated:YES
+                             completion:nil];
+        }];
+        self.productViewController = productViewController;
     }
     else
     {
         NSString *appUrlString = [NSString stringWithFormat:@"itms-apps://itunes.apple.com/app/id%u?mt=8", appObject.appId];
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:appUrlString]];
+        NSURL *appUrl = [NSURL URLWithString:appUrlString];
+        if ([[UIApplication sharedApplication] canOpenURL:appUrl]) {
+            [[UIApplication sharedApplication] openURL:appUrl];
+        }
+        else {
+            NSError *error = [NSError errorWithDomain:@"DAAppsErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey : @"Unable open app url"}];
+            [self presentError:error];
+        }
     }
 }
 
@@ -509,6 +526,16 @@
 - (void)productViewControllerDidFinish:(SKStoreProductViewController *)viewController
 {
     [viewController dismissViewControllerAnimated:YES completion:nil];
+}
+
+#pragma mark - Error
+
+- (void)presentError:(NSError *)error {
+    if ([error.domain isEqualToString:NSCocoaErrorDomain] && error.code == NSUserCancelledError) {
+        return;
+    }
+    
+    [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error",@"") message:[error localizedDescription] delegate:nil cancelButtonTitle:NSLocalizedString(@"Close",@"") otherButtonTitles:nil] show];
 }
 
 @end

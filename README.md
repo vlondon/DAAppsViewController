@@ -1,4 +1,5 @@
 # DAAppsViewController
+## MoreApps edition
 
 `DAAppsViewController` is a simple way of displaying apps from the App Store in an aesthetically similar manner. The user is able to view each app's App Store page by launching an instance of `SKStoreProductViewController`. Particularly useful for showing an app developer's other apps.
 
@@ -15,6 +16,9 @@
 Example project included (DAAppsViewControllerExample)
 
 ### Displaying apps by a specific developer (useful for "Our other apps")
+
+Get your artist ID in iTunes first:
+![Screenshot](https://github.com/rbaulin/DAAppsViewController/raw/master/howToGetArtistId)
 
 ```objective-c
 DAAppsViewController *appsViewController = [[DAAppsViewController alloc] init];

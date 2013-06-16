@@ -1,0 +1,17 @@
+PODS:
+  - DAAppsViewController (1.2.0)
+  - SVProgressHUD (0.9)
+
+DEPENDENCIES:
+  - DAAppsViewController (from `../DAAppsViewController.podspec`)
+  - SVProgressHUD
+
+EXTERNAL SOURCES:
+  DAAppsViewController:
+    :path: ../DAAppsViewController.podspec
+
+SPEC CHECKSUMS:
+  DAAppsViewController: f32d07b4053a75fc1adf051a8feff09c64e33a29
+  SVProgressHUD: 03d4845ec8e64591726428a08236c6a5489d45f8
+
+COCOAPODS: 0.20.2
