@@ -27,6 +27,17 @@
 
 @implementation DAAppsViewController
 
++ (DAAppsViewController *)sharedInstance
+{
+    static DAAppsViewController *sharedInstance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedInstance = [[DAAppsViewController alloc] init];
+        // Do any other initialization stuff here
+    });
+    return sharedInstance;
+}
+
 #pragma mark - View methods
 
 - (void)viewDidLoad
@@ -484,6 +495,7 @@
 
 #pragma mark - Presentation methods
 
+
 - (void)presentAppObjectAtIndexPath:(NSIndexPath *)indexPath
 {
     DAAppObject *appObject = [self.appsArray objectAtIndex:indexPath.row];
@@ -493,31 +505,39 @@
         self.didViewAppBlock(appObject.appId);
     }
     
+    [self presentAppWithId:@(appObject.appId) fromViewController:self completion:nil];
+}
+
+- (void)presentAppWithId:(NSNumber *)appId fromViewController:(UIViewController *)vc completion:(void (^)(NSError *error))completionBlock {
     if ([SKStoreProductViewController class])
     {
-        NSDictionary *appParameters = @{SKStoreProductParameterITunesItemIdentifier : @(appObject.appId)};
+        NSDictionary *appParameters = @{SKStoreProductParameterITunesItemIdentifier : appId};
         SKStoreProductViewController *productViewController = [[SKStoreProductViewController alloc] init];
         [productViewController setDelegate:self];
         if (self.loadingBlock) self.loadingBlock(YES, nil);
         [productViewController loadProductWithParameters:appParameters completionBlock:^(BOOL result, NSError *error) {
             if (self.loadingBlock) self.loadingBlock(NO, error);
-            [self presentViewController:productViewController
+            [vc presentViewController:productViewController
                                animated:YES
                              completion:nil];
+            if (completionBlock) completionBlock(error);
         }];
         self.productViewController = productViewController;
     }
     else
     {
-        NSString *appUrlString = [NSString stringWithFormat:@"itms-apps://itunes.apple.com/app/id%u?mt=8", appObject.appId];
+        NSError *error;
+        NSString *appUrlString = [NSString stringWithFormat:@"itms-apps://itunes.apple.com/app/id%@?mt=8", appId];
         NSURL *appUrl = [NSURL URLWithString:appUrlString];
         if ([[UIApplication sharedApplication] canOpenURL:appUrl]) {
             [[UIApplication sharedApplication] openURL:appUrl];
         }
         else {
-            NSError *error = [NSError errorWithDomain:@"DAAppsErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey : @"Unable open app url"}];
-            [self presentError:error];
+            error = [NSError errorWithDomain:@"DAAppsErrorDomain" code:1 userInfo:@{NSLocalizedDescriptionKey : @"Unable open app url"}];
+//            [self presentError:error];
         }
+        if (self.loadingBlock) self.loadingBlock(NO, error);
+        if (completionBlock) completionBlock(error);
     }
 }
 

@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 
 @interface DAAppsViewController : UITableViewController
++ (DAAppsViewController *)sharedInstance;
 
 // we need to show HUD during load operations
 // but we do not want to use any dependecies (for non-Pods users?)
@@ -23,5 +24,7 @@
 - (void)loadAppsWithAppIds:(NSArray *)appIds completionBlock:(void(^)(BOOL result, NSError *error))block;
 - (void)loadAppsWithBundleIds:(NSArray *)bundleIds completionBlock:(void(^)(BOOL result, NSError *error))block;
 - (void)loadAppsWithSearchTerm:(NSString *)searchTerm completionBlock:(void(^)(BOOL result, NSError *error))block;
+
+- (void)presentAppWithId:(NSNumber *)appId fromViewController:(UIViewController *)vc completion:(void (^)(NSError *error))completionBlock;
 
 @end
